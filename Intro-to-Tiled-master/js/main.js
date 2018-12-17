@@ -256,14 +256,24 @@ function addSound() {
     SFX.collect = this.sound.add('collectSFX', { loop: false, volume: 0.7 });
     SFX.hurt = this.sound.add('hurtSFX', { loop: false, volume: 0.5 });
 }
+
 function findPoints(map, layer, type) {
-    var locs = map.filterObjects(layer, obj => obj.type === type);
+    //var locs = map.filterObjects(layer, obj => obj.type === type);
     var locs = map.filterObjects(layer, function (object) {
         if (object.type === type) {
             return object
         }
     });
     return locs
+}
+function findPoint(map, layer, type, name) {
+    var loc = map.findObject(layer, function (object) {
+        if (object.type === type && object.name === name) {
+            //console.log(object);
+            return object;
+        }
+    });
+    return loc
 }
 
 //Create the collision and overlap events
