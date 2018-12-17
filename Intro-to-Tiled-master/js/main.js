@@ -88,6 +88,7 @@ function create() {
     createPlayerAnimations.call(this);
     var collisionlayer = map.createStaticLayer("collisionlayer", [landscape, props], 0, 0);
     console.log(collisionlayer)
+    player.setCollideWorldBounds(true);
     collisionlayer.setCollisionBetween(0, 1000);
     this.physics.add.collider(player, collisionlayer);
 
@@ -101,15 +102,7 @@ function create() {
         }
 
     });
-    function findPoints(map, layer, type) {
-        //var locs = map.filterObjects(layer, obj => obj.type === type);
-        var locs = map.filterObjects(layer, function (object) {
-            if (object.type === type) {
-                return object
-            }
-        });
-        return locs
-    }
+  
     this.anims.create({
         key: 'flap',
         frames: this.anims.generateFrameNumbers('bat', { start: 0, end: 2 }),
@@ -121,7 +114,7 @@ function create() {
 
     //bat variables with current spawn to destination shown in tiled.
     var batSpawn, batDest, line, bat;
-    var batPoints = findPoints.call(this, map, 'ObjectLayer', 'bat');
+    var batPoints = findPoints.call(this, map, "ObjectLayer", 'bat');
     //divided by 2 as I have two points
     var len = batPoints.length / 2;
     for (var i = 1; i < len + 1; i++) {
@@ -161,6 +154,7 @@ function create() {
     keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
     addMusic.call(this);
+    addSound.call(this);
 
 
 }
@@ -253,12 +247,23 @@ function createPlayer(playerSpawn) {
 }
 
 function addMusic() {
-    music.overground = this.sound.add('overgroundMusic', { loop: true, volume: 0.5 });
-    music.underground = this.sound.add('undergroundMusic', { loop: true, volume: 0.5 });
+    music.overground = this.sound.add('overgroundMusic', { loop: true, volume: 0.3 });
+    music.underground = this.sound.add('undergroundMusic', { loop: true, volume: 0.3 });
 }
 
 function addSound() {
-    SFX.jump = this.sound.add('jumpSFX', { loop: false, volume: 0.5 });
+    SFX.jump = this.sound.add('jumpSFX', { loop: false, volume: 0.2 });
+    SFX.collect = this.sound.add('collectSFX', { loop: false, volume: 0.7 });
+    SFX.hurt = this.sound.add('hurtSFX', { loop: false, volume: 0.5 });
+}
+function findPoints(map, layer, type) {
+    var locs = map.filterObjects(layer, obj => obj.type === type);
+    var locs = map.filterObjects(layer, function (object) {
+        if (object.type === type) {
+            return object
+        }
+    });
+    return locs
 }
 
 //Create the collision and overlap events
@@ -267,6 +272,7 @@ function createCollision() {
 }
 function collectJewels(player, jewel) {
     console.log("hello")
+    SFX.collect.play();
     jewel.disableBody(true, true);
     score += 10;
     scoreText.setText('Score: ' + score);
@@ -308,6 +314,7 @@ function createPlayerAnimations() {
     });
 }
 function batAttack(player, bat) {
+    SFX.hurt.play();
     this.physics.pause();
     player.setTint(0xff0000);
     bats.children.each(function (bat) {
@@ -361,6 +368,7 @@ function checkPlayerMovement() {
 
     //Reset jumpCount. Important for double jumping.
     if (cursors.space.isDown && player.body.blocked.down) {
+        SFX.jump.play();
         player.jumpCount = 0;
         player.setVelocityY(-VEL_Y);
     }
@@ -369,9 +377,8 @@ function checkPlayerMovement() {
     //Then, jump.
     if (Phaser.Input.Keyboard.JustDown(cursors.space) && player.jumpCount < player.maxJump) {
         player.jumpCount++;
+
         player.setVelocityY(-VEL_Y);
-        player.anims.play('jump', true);
-        SFX.jump.play();
     }
 
     //Display jumping or falling animations
@@ -380,6 +387,7 @@ function checkPlayerMovement() {
 
     } else if (player.body.velocity.y > 0) {
         player.anims.play('fall', true);
+
     }
 
 }
